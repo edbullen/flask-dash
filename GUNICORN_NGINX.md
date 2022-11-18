@@ -132,7 +132,7 @@ ln -s /etc/nginx/sites-available/flaskapp /etc/nginx/sites-enabled
 #### Test Nginx Configuration ####
 
 ```
-nginx -t
+sudo nginx -t
 ```
 Expected output:
 ```
@@ -144,20 +144,23 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 
 
 ```commandline
-systemctl restart flaskapp
+sudo systemctl restart flaskapp
 ```
 
 ```
-systemctl restart nginx
+sudo systemctl restart nginx
 ```
 
 The flask application should be available on Port 80, if the firewall rules allow it.
   
 Check status:
 ```
-systemctl status nginx
+sudo systemctl status nginx
 ```
 
+```
+sudo systemctl status flaskapp
+```
 
 
 ## SSL Encryption ##
@@ -287,7 +290,7 @@ server {
 and use 
 
 ```
-nginx -t
+sudo nginx -t
 ```
 to test the configuration.
 
@@ -306,7 +309,7 @@ server {
 ```
 where `mydomain.com` is an example domain to redirect target traffic for (replace as appropriate)
 
-Use `nginx -t` to check the config.  
+Use `sudo nginx -t` to check the config.  
 
 ### Start with New Configuration ###
 
@@ -314,8 +317,8 @@ Use `nginx -t` to check the config.
 Restart the services:
 
 ```
-systemctl restart flaskapp
-systemctl restart nginx
+sudo systemctl restart flaskapp
+sudo systemctl restart nginx
 
 ```
 

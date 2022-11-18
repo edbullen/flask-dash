@@ -33,7 +33,10 @@ Ubuntu Library dependencies
 
 Ubuntu 18
 
-sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
+```
+sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev \
+   tk-dev libgdbm-dev libc6-dev libbz2-dev build-essential  zlib1g-dev   libffi-dev
+```    
 
 ### User Mixin Integration Reference
 
@@ -136,7 +139,7 @@ By default, two roles exist: `user` and `admin`.
 
 Pages / routes can be protected with the decorator `access_required()`. Example  
 ```python
-# example of page where session has to be logged in to see and the user has to be a member of group "admin"
+# example page where session has to be logged in and the user has to be a member of group "admin"
 @app.route("/admin")
 @login_required
 @access_required(role="admin")

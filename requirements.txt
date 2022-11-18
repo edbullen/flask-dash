@@ -11,4 +11,5 @@ Flask-SQLAlchemy
 Flask-Migrate 
 Flask-Principal
 Flask-Security
+pandas
 
