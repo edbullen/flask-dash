@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1> Flask Dash Example Chart </h1>
+
+<div class="chart" id="plot1">
+    <script>
+        var graphs = {{plot1 | safe}};
+        var config = {displayModeBar: false, responsive: true};
+        var layout = {};
+        Plotly.setPlotConfig(config);
+        Plotly.plot('plot1',graphs,layout);
+    </script>
+</div>
+
+{% endblock %}

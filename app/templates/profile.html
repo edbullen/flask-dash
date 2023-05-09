@@ -6,7 +6,7 @@
 
     {% if current_user.email == user.email %}
     Logged in as <span class="badge badge-dark">{{user.email}}</span>
-    <a href="{{ url_for('logout') }}">(logout)</a> <br>
+    <br>
     {% else %}
     Profile for <span class="badge badge-secondary">{{user.email}}</span> <br>
     {% endif %}

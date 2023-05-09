@@ -149,6 +149,12 @@ def admin():
 ```
 
 
+# Charts
+
+React JS charts are rendered by **Plotly**: [https://github.com/plotly/plotly.py](https://github.com/plotly/plotly.py)
+
+
+
 
 # Other notes
 

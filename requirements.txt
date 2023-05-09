@@ -12,4 +12,10 @@ Flask-Migrate
 Flask-Principal
 Flask-Security
 pandas
-
+plotly>=5.0.0
+#dash==2.7.0
+#dash_html_components==2.0.0
+#dash_core_components==2.0.0
+#dash_table==5.0.0
+#dash_renderer
+pandas_datareader  # only required for loading chart sample data

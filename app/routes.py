@@ -12,6 +12,7 @@ from flask_login import (
 
 from functools import wraps
 
+# Flask web-app data and web-form imports
 from app.models import User
 from app.models import OAuth
 from app.models import Role
@@ -19,8 +20,12 @@ from app.models import UserRoles
 
 from app.forms import EditProfileForm, FindUsersForm
 
+# Utils for managing users
 from app.utils import add_user_to_role
 from app.utils import del_user_from_role
+
+# Utils for generating chart JSON
+from app.utils import create_bar_plot
 
 # db = SQLAlchemy()
 
@@ -44,14 +49,13 @@ def access_required(role):
 @login_required
 def logout():
     logout_user()
-    #flash("Successfully logged out", "info")
+    # flash("Successfully logged out", "info")
     return redirect(url_for("index"))
 
 
 # landing page for authenticated and non-authenticated users
 @app.route("/")
 def index():
-
     return render_template("index.html")
 
 
@@ -87,7 +91,6 @@ def profile(email):
 @login_required
 @access_required(role="admin")
 def profile_edit():
-
     u = User.query.filter_by(email=session.get("user_email")).first_or_404()
     user_roles = [r.name for r in u.roles]
     all_roles = [r.name for r in Role.query.all()]
@@ -101,12 +104,12 @@ def profile_edit():
         for nr in new_roles:
             if nr not in user_roles:
                 add_user_to_role(u.email, nr)
-                #flash("Added {} to role \"{}\"".format(u.email, nr), "info")
+                # flash("Added {} to role \"{}\"".format(u.email, nr), "info")
         # process existing roles and remove if necessary
         for xr in user_roles:
             if xr not in new_roles:
                 del_user_from_role(u.email, xr)
-                #flash("Removed {} from role \"{}\"".format(u.email, xr), "info")
+                # flash("Removed {} from role \"{}\"".format(u.email, xr), "info")
 
         # refresh the user_roles
         user_roles = [r.name for r in u.roles]
@@ -144,7 +147,6 @@ def profile_edit():
 @login_required
 @access_required(role="admin")
 def find_users():
-
     # Initialise the form with the users email, roles available, current roles
     form = FindUsersForm()
 
@@ -169,3 +171,44 @@ def admin():
 @access_required(role="user")
 def homepage():
     return render_template("homepage.html")
+
+
+# example of a Plotly chart
+@app.route("/bar_chart_sample")
+@login_required
+@access_required(role="user")
+def bar_chart_sample():
+
+    x_ticks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    x_ticks = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"]
+
+    # list of lists to pass plot multiple stacked or side-by-side bar charts for
+    y_array = [
+          [3, 2, 1, 4, 5, 4, 4, 0, 0, 1]
+        , [1, 1, 1, 1, 1, 0, 2, 3, 4, 5]
+        , [1, 2, 1, 2, 1, 2, 1, 2, 1, 0]
+        , [1, 2, 1, 2, 1, 2, 1, 2, 1, 0]
+    ]
+    legend_labels = ["thing", "stuff", "other", "bits"]
+
+    # example for a single set of y-vals
+    y_array = [3, 2, 1, 4, 5, 4, 4, 0, 0, 1]
+    legend_labels = ["thing"]
+
+
+
+    # Create the JSON for Plotly bar chart for 2 sets of y-val for each x axis tick mark
+    bar_chart_json = create_bar_plot(x_list=[x for x in x_ticks]
+                                     , y_list=y_array
+                                     , y_label="Y-Axis"
+                                     #, show_legend=False
+                                     , stacked=True
+                                     , line_dict_list=None
+                                     , colors_list=None
+                                     , legend_bottom=True
+                                     , legend_labels=legend_labels
+                                     , xaxis_tickangle=-45
+                                     #, hovermode=False
+                                     )
+
+    return render_template("bar_chart_sample.html", plot1=bar_chart_json)

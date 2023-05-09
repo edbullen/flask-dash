@@ -13,8 +13,15 @@
 
 {% if current_user.is_authenticated %}
 
+  <li> Link to static Bar Chart Sample - <a href="{{ url_for('bar_chart_sample') }}">hard-coded bar chart </a> using <a href="https://github.com/plotly/plotly.py">Plotly</a>
+  <li> Link to dynamic NYC Taxi Chart - dynamic chart using NYC Taxi data from Databricks sample data-sets.
+
   <br>
-  <br> see the Session-Login Protected information at <a href="{{ url_for('protected') }}">Protected Page</a>
+  <br>
+  <br>
+  <h3> Test Authentication and Roles</h3>
+
+       see the Session-Login Protected information at <a href="{{ url_for('protected') }}">Protected Page</a>
   <br> see the Role-Protected home-page (requires "user" role) at <a href="{{ url_for('homepage') }}">Home Page</a>
   <br> see the Admin Page (requires the "admin" role) at <a href="{{ url_for('admin') }}">Admin Page</a>
 
