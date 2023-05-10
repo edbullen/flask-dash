@@ -38,7 +38,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersekrit")
 
 # log dir location
-app.config["LOG_DIR"] = os.environ.get("FLASK_LOG_DIR")
+app.config["LOG_DIR"] = os.environ.get("FLASK_LOG_DIR", "./logs")
 app.config["PYTHON_LOGGER_LEVEL"] = os.environ.get("PYTHON_LOGGER_LEVEL", "INFO")
 
 # Get the  “Client ID” and “Client Secret” from the "Credentials"->"Oauth 2.0 Client ID" in Google Console

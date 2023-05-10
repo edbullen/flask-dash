@@ -24,6 +24,9 @@ from app.forms import EditProfileForm, FindUsersForm
 from app.utils import add_user_to_role
 from app.utils import del_user_from_role
 
+# Databricks connectivity
+from app.databricks import SparkConnect
+
 # Utils for generating chart JSON
 from app.utils import create_bar_plot
 
@@ -56,7 +59,12 @@ def logout():
 # landing page for authenticated and non-authenticated users
 @app.route("/")
 def index():
-    return render_template("index.html")
+
+    spark = SparkConnect.spark
+    cluster_id = SparkConnect.cluster_id
+    df = spark.table("samples.nyctaxi.trips").limit(10).toPandas()
+
+    return render_template("index.html", df=df, cluster_id=cluster_id)
 
 
 # example of page that session has to be logged in to see

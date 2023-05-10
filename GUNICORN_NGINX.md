@@ -163,138 +163,37 @@ sudo systemctl status flaskapp
 ```
 
 
-## SSL Encryption ##
+## SSL - install self-signed certificates
 
-ref: https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-in-ubuntu-16-04
+These instructions are taken from Step 6 in the following:
+[https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-22-04]()
 
-```
-cd /etc/ssl
-```
-
-Generate a Self-Signed Certificate and Key
+### 1. Install Certbot
 
 ```
-openssl req -x509 -nodes -days 730 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
-```
-Sample output:
-```
-You are about to be asked to enter information that will be incorporated
-into your certificate request.
-What you are about to enter is what is called a Distinguished Name or a DN.
-There are quite a few fields but you can leave some blank
-For some fields there will be a default value,
-If you enter '.', the field will be left blank.
------
-Country Name (2 letter code) [UK]:
-State or Province Name (full name) [Some-State]:
-Locality Name (eg, city) []:
-Organization Name (eg, company) [Internet Widgits Pty Ltd]:My Org
-Organizational Unit Name (eg, section) []:My Org Unit
-Common Name (e.g. server FQDN or YOUR name) []:<my DNS or my public IP>
-Email Address []:
+sudo apt install certbot python3-certbot-nginx
 ```
 
-Check the Key and Certificate:
+Certbot needs to be able to find the correct server block in your Nginx configuration for it to be able to automatically configure SSL.
+This is done by checking `server_name` in the NGINX `sites-available` configuration.
 
-```
-openssl x509 -noout -modulus -in /etc/ssl/certs/nginx-selfsigned.crt | openssl md5
-openssl rsa -noout -modulus -in /etc/ssl/private/nginx-selfsigned.key | openssl md5
-```
-These should have the same output (https://stackoverflow.com/questions/26191463/ssl-error0b080074x509-certificate-routinesx509-check-private-keykey-values)
+### 2. Configure SSL 
 
+From *"Securing the Application"* in the web-tutorial
 
-
-Generate a Diffie-Hellman parameters for secure key exchange:
-
-```
-openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048 
+```python
+sudo certbot --nginx -d your_domain -d www.your_domain
 ```
 
-Add the new config to the Nginx `snippets` folder in file `/etc/nginx/snippets/self-signed.conf` 
-   
-Contents:  
+### 3. Restart NGINX and test
 
 ```
-ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-
+sudo systemctl restart nginx
 ```
 
-Add an Nginx Params Snippet to file `/etc/nginx/snippets/ssl-params.conf`
-  
-Contents:
+Check that the https URL for the website is available (make sure the https port 443 is open on the firewall)
 
-```
-# from https://cipherli.st/
-# and https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-
-ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-ssl_prefer_server_ciphers on;
-ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
-ssl_ecdh_curve secp384r1;
-ssl_session_cache shared:SSL:10m;
-ssl_session_tickets off;
-ssl_stapling on;
-ssl_stapling_verify on;
-resolver 8.8.8.8 8.8.4.4 valid=300s;
-resolver_timeout 5s;
-# Disable preloading HSTS for now.  You can use the commented out header line that includes
-# the "preload" directive if you understand the implications.
-#add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
-add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
-add_header X-Frame-Options DENY;
-add_header X-Content-Type-Options nosniff;
-
-ssl_dhparam /etc/ssl/certs/dhparam.pem;
-
-```
-
-## Update the Nginx Sites file to use SSL Encrypt Cert on Port 443 ##
-
-```
-/etc/nginx/sites-enabled/flaskapp
-```
-
-
-Before
-```
-
-server {
-    listen 80;
-    server_name mydomain.com www.mydomain.com;
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/ubuntu/flask-dash/flask-dash.sock;
-    }
-}
-
-
-```
-
-After
-
-```
-server {
-    listen 443 ssl;
-    server_name mydomain.com www.mydomain.com;
-    ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/ubuntu/flask-dash/flask-dash.sock;
-    }
-}
-
-```
-
-and use 
-
-```
-sudo nginx -t
-```
-to test the configuration.
-
-### Ensure Port 80 Redirect is in place ###
+### 4. Redirect port 80 to port 443
 
 Edit the default NGINX web configuration to redirect all port 80 traffic to port 443.
 
@@ -306,151 +205,11 @@ server {
         listen [::]:80 default_server;
         server_name _;
         return 302 https://$host$request_uri;
+       }
 ```
+
++ usually it is only necessary to add the `return 302 https://$host$request_uri;` entru after the `server_name` statement.
+
 where `mydomain.com` is an example domain to redirect target traffic for (replace as appropriate)
 
-Use `sudo nginx -t` to check the config.  
-
-### Start with New Configuration ###
-
-
-Restart the services:
-
-```
-sudo systemctl restart flaskapp
-sudo systemctl restart nginx
-
-```
-
-*This still results in Site Not Secure message in browser due to self-certified certificate*
-
-# SSL Encryption with a Signed Certificate #
-
-ref: https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-gunicorn-and-nginx-on-ubuntu-18-04
-
-1. Install CertBot for NGINX
-
-```
-add-apt-repository ppa:certbot/certbot
-
-apt install python-certbot-nginx
-```
-
-2. Add the domain to be configured to the CertBot configuration
-
-```
-
-certbot --nginx -d <mydomain>.com -d www.<mydomain>.com
-```
-
-
-Sample session:
-
-```
-# certbot --nginx -d <mydomain>.com -d www.<mydomain>.com
-...
-...
-Enter email address (used for urgent renewal and security notices) (Enter 'c' to
-cancel): 
-...
-...
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Please read the Terms of Service at
-https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf. You must
-agree in order to register with the ACME server at
-https://acme-v02.api.letsencrypt.org/directory
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-(A)gree/(C)ancel: A
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Would you be willing to share your email address with the Electronic Frontier
-Foundation, a founding partner of the Let's Encrypt project and the non-profit
-organization that develops Certbot? We'd like to send you email about our work
-encrypting the web, EFF news, campaigns, and ways to support digital freedom.
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-(Y)es/(N)o: N
-Obtaining a new certificate
-Performing the following challenges:
-http-01 challenge for <mydomain>.com
-http-01 challenge for www.<mydomain>.com
-Waiting for verification...
-Cleaning up challenges
-Deploying Certificate to VirtualHost /etc/nginx/sites-enabled/flaskapp
-Deploying Certificate to VirtualHost /etc/nginx/sites-enabled/flaskapp
-
-Please choose whether or not to redirect HTTP traffic to HTTPS, removing HTTP access.
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-1: No redirect - Make no further changes to the webserver configuration.
-2: Redirect - Make all requests redirect to secure HTTPS access. Choose this for
-new sites, or if you're confident your site works on HTTPS. You can undo this
-change by editing your web server's configuration.
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Select the appropriate number [1-2] then [enter] (press 'c' to cancel): 2
-No matching insecure server blocks listening on port 80 found.
-No matching insecure server blocks listening on port 80 found.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Congratulations! You have successfully enabled https://<mydomain>.com and
-https://www.<mydomain>.com
-
-IMPORTANT NOTES:
- - Congratulations! Your certificate and chain have been saved at:
-   /etc/letsencrypt/live/<mydomain>.com/fullchain.pem
-   Your key file has been saved at:
-   /etc/letsencrypt/live/<mydomain>.com/privkey.pem
-   Your cert will expire on <YYYY-MM-DD>. To obtain a new or tweaked
-   version of this certificate in the future, simply run certbot again
-   with the "certonly" option. To non-interactively renew *all* of
-   your certificates, run "certbot renew"
- - Your account credentials have been saved in your Certbot
-   configuration directory at /etc/letsencrypt. You should make a
-   secure backup of this folder now. This configuration directory will
-   also contain certificates and private keys obtained by Certbot so
-   making regular backups of this folder is ideal.
- - If you like Certbot, please consider supporting our work by:
-
-   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
-   Donating to EFF:                    https://eff.org/donate-le
-```
-
-
-This updates the `/etc/nginx/sites-available/flaskapp` configuration and installs the CertBot signed certificates.
-
-**Remove the default NGINX site configuration** - this has probably been mangled by the certbot installation 
-
-```commandline
-rm /etc/nginx/sites-enabled/default
-
-mv /etc/nginx/sites-available/default /root/nginx.default.bak
-```
-  
-Restart FlaskApp and Nginx and test.  
-
-SSL access should be possible without any insecure site messages.  
-
-
-### Sample NGINX Site Configuration
-
-```
-# redirect http to https
-server {
-	listen 80 default_server;
-	listen [::]:80 default_server;
-	server_name _;
-	return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name  <mydomain>.net www.<mydomain>.net;
-    ssl_certificate /etc/letsencrypt/live/<mydomain>.net/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/<mydomain>.net/privkey.pem; # managed by Certbot
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/ubuntu/flask-dash/flask-dash.sock;
-    }
-
-}
-
-```
+Use `sudo nginx -t` to check the config then restart NGINX

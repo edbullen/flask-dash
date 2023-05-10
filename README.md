@@ -153,6 +153,26 @@ def admin():
 
 React JS charts are rendered by **Plotly**: [https://github.com/plotly/plotly.py](https://github.com/plotly/plotly.py)
 
+# Databricks Access
+
++ Connectivity to Databricks uses the [dbconnect-connect](https://pypi.org/project/databricks-connect/) library   
++ This has a dependency on the [Databricks cluster version](https://docs.databricks.com/release-notes/runtime/releases.html) being >= 13.0  
++ There is also a dependency on connecting to a [Unity Catalog](https://docs.databricks.com/data-governance/unity-catalog/index.html) enabled workspace.  
++ Authentication to Databricks cluster is currently via [PAT](https://docs.databricks.com/dev-tools/api/latest/authentication.html) (Personal Access Token) - future support for OAUTH is likely
+
+
+Set the environment variable `DATABRICKS_WORKSPACE_URL` to the Workspace URL to use for Databricks access
+```
+DATABRICKS_WORKSPACE_URL="https://################.#.gcp.databricks.com/"
+```
+Set the environment variable `DATABRICKS_CLUSTER` to the cluster ID to use for running Databricks operations 
+```
+DATABRICKS_CLUSTER=<mycluster-name>
+```
+Set the environment variable `DATABRICKS_TOKEN` to use the PAT for connecting to the Databricks Cluster
+```
+DATABRICKS_TOKEN=dapi################################
+```
 
 
 
