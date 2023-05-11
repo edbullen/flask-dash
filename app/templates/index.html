@@ -14,13 +14,9 @@
 {% if current_user.is_authenticated %}
 
   <li> Link to static Bar Chart Sample - <a href="{{ url_for('bar_chart_sample') }}">hard-coded bar chart </a> using <a href="https://github.com/plotly/plotly.py">Plotly</a>
-  <li> Link to dynamic NYC Taxi Chart - dynamic chart using NYC Taxi data from Databricks sample data-sets.
+  <li> Link to dynamic NYC Taxi Chart - <a href="{{ url_for('databricks_chart_sample') }}"> Source data from Databricks cluster </a>
 
   <br>
-
-  Connected to {{cluster-id}}
-
-  {{df}}
 
   <br>
   <br>

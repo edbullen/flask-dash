@@ -1,3 +1,5 @@
+import logging
+
 from app import app
 from flask import redirect, url_for, flash, render_template, session, request
 
@@ -28,7 +30,12 @@ from app.utils import del_user_from_role
 from app.databricks import SparkConnect
 
 # Utils for generating chart JSON
-from app.utils import create_bar_plot
+from app.graph_utils import create_bar_plot
+from app.graph_utils import simple_bar_plot
+
+# pyspark imports
+from pyspark.sql.types import LongType, IntegerType, StringType
+from pyspark.sql.functions import udf
 
 # db = SQLAlchemy()
 
@@ -62,9 +69,8 @@ def index():
 
     spark = SparkConnect.spark
     cluster_id = SparkConnect.cluster_id
-    df = spark.table("samples.nyctaxi.trips").limit(10).toPandas()
 
-    return render_template("index.html", df=df, cluster_id=cluster_id)
+    return render_template("index.html")
 
 
 # example of page that session has to be logged in to see
@@ -203,8 +209,6 @@ def bar_chart_sample():
     y_array = [3, 2, 1, 4, 5, 4, 4, 0, 0, 1]
     legend_labels = ["thing"]
 
-
-
     # Create the JSON for Plotly bar chart for 2 sets of y-val for each x axis tick mark
     bar_chart_json = create_bar_plot(x_list=[x for x in x_ticks]
                                      , y_list=y_array
@@ -217,6 +221,77 @@ def bar_chart_sample():
                                      , legend_labels=legend_labels
                                      , xaxis_tickangle=-45
                                      #, hovermode=False
+                                     )
+
+    return render_template("bar_chart_sample.html", plot1=bar_chart_json)
+
+
+# example of a Plotly chart generated from Databricks data source
+@app.route("/databricks_chart_sample")
+@login_required
+@access_required(role="user")
+def databricks_chart_sample():
+
+    # get data from Databricks
+    spark = SparkConnect.spark
+    cluster_id = SparkConnect.cluster_id
+    try:
+
+        df = spark.sql("""
+           SELECT fare_amount,
+               SUM(trip_distance) as SumTripDistance,
+               AVG(trip_distance) as AvgTripDistance
+           FROM samples.nyctaxi.trips
+           WHERE trip_distance > 0 AND fare_amount > 0
+           GROUP BY fare_amount
+           ORDER BY fare_amount
+        """)
+
+        # bucketizer function
+        def bucketizer(fare):
+            if fare < 10:
+                return "0_to_10"
+            elif fare < 20:
+                return "10_to_20"
+            elif fare < 30:
+                return "20_to_30"
+            elif fare < 40:
+                return "30_to_40"
+            elif fare < 50:
+                return "40_to_50"
+            elif fare < 60:
+                return "50_to_60"
+            elif fare < 70:
+                return "70_to_80"
+            elif fare < 80:
+                return "80_to_90"
+            elif fare < 99:
+                return "90_to_98"
+            else:
+                return "99_plus"
+
+        # pyspark operation to run buckting fn on Spark against the taxi data set
+        bucket_udf = udf(bucketizer, StringType())
+        bucketed = df.withColumn("bucket", bucket_udf("fare_amount"))
+
+        fare_buckets_and_trip_distances = bucketed.groupby('bucket').mean('AvgTripDistance').sort('bucket') \
+            .withColumnRenamed("bucket", "fare").withColumnRenamed("avg(AvgTripDistance)", "avg_distance").toPandas()
+
+    except Exception as e:
+        fare_buckets_and_trip_distances = None
+        app.logger.info(f"Databricks connect error: {str(e)}")
+        flash("Databricks Connect Error - check webserverlogs", 'danger')
+
+    x_ticks = fare_buckets_and_trip_distances['fare']
+    y_array = list(fare_buckets_and_trip_distances['avg_distance'])
+
+    legend_labels = None
+
+    # Create the JSON for Plotly bar chart for 2 sets of y-val for each x axis tick mark
+    bar_chart_json = simple_bar_plot(x_list=[x for x in x_ticks]
+                                     , y_list=y_array
+                                     , x_label="Fare Bucket"
+                                     , y_label="Avg Distance"
                                      )
 
     return render_template("bar_chart_sample.html", plot1=bar_chart_json)
