@@ -16,12 +16,22 @@ from app.models import Role
 from app.models import UserRoles
 
 
+def add_user(email, username):
+    """add a new user
+    :param email:   email ID that will be used to oauth login to Google
+    :param username: username that will be recorded as free-text identifier mapped to the email ID
+    """
+    user = User(email=email, username=username)
+    db.session.add(user)
+    db.session.commit()
+    app.logger.info("Add email ID {} , username  {}".format(email, username))
 
 def add_role(role_name):
     """add a new role"""
     role = Role(name=role_name)
     db.session.add(role)
     db.session.commit()
+    app.logger.info("Add role {} ".format(role_name))
 
 
 def add_user_to_role(email, role_name):

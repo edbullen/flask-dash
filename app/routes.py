@@ -281,6 +281,7 @@ def databricks_chart_sample():
         fare_buckets_and_trip_distances = None
         app.logger.info(f"Databricks connect error: {str(e)}")
         flash("Databricks Connect Error - check webserverlogs", 'danger')
+        return redirect(url_for('index'))
 
     x_ticks = fare_buckets_and_trip_distances['fare']
     y_array = list(fare_buckets_and_trip_distances['avg_distance'])

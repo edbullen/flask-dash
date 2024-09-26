@@ -6,7 +6,7 @@ Based on the following:
 and  
 [Flask Dance](https://github.com/singingwolfboy/flask-dance-google) - Documentation: https://flask-dance.readthedocs.io/en/v0.8.3/quickstarts/google.html  
 
-Developed and tested with Python 3.9.11  
+Developed and tested with Python 3.10.6
 
 ## Code Structure
 
@@ -124,6 +124,8 @@ Configure to run on port *443* (SSL encrypted) with **NGINX and GUNICORN**: [./G
 ### Manage Users and Roles outside the web application
 Roles can be added and removed and users can be added to / removed from roles by using the `useradmin` tool.  This is a command-line utility that has to be run locally to the server environment.
 
+- List users: `./useradmin -lu`
+- Add a user: ` ./useradmin -a -e <my.email>@gmail.com -u "My Name"`
 - List roles: `./useradmin -lr`  
 - Add a role: `./useradmin -a -r general`  
 - Delete a role `./useradmin -d -r general`  

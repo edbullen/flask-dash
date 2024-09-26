@@ -27,15 +27,24 @@ if __name__ == '__main__':
 
     parser.add_argument('-r', dest='role_name', action='store', help='Role name', required=False)
     parser.add_argument('-e', dest='email', action='store', help='Email ID', required=False)
+    parser.add_argument('-u', dest='username', action='store', help='User Name (not the email ID for authentication)', required=False)
 
 
     args = vars(parser.parse_args())
 
     # fix for "No application found. Either work inside a view function or push an application context"
     with app.app_context():
-
         if args["add"]:
-            if args["role_name"] and not args["email"]:
+            # add a user
+            if args["email"] and not args["role_name"]:
+                if args["username"]:
+                    username = args["username"]
+                else:
+                    username = ''
+                utils.add_user(args["email"], username=username)
+
+            # add a role
+            elif args["role_name"] and not args["email"]:
                 role_name = args["role_name"]
                 # add a new role
                 utils.add_role(role_name)
