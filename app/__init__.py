@@ -148,7 +148,7 @@ def google_logged_in(google_bp, token):
         # if there are no admin users yet, make this user admin
         admin_users = count_users_in_role("admin")
         if admin_users == 0:
-            add_user_to_role(current_user.email, "admin")
+            add_user_to_role(login_info["email"], "admin")
 
         db.session.commit()
         # Log in the new local user account

@@ -26,6 +26,7 @@ def add_user(email, username):
     db.session.commit()
     app.logger.info("Add email ID {} , username  {}".format(email, username))
 
+
 def add_role(role_name):
     """add a new role"""
     role = Role(name=role_name)
@@ -64,16 +65,29 @@ def get_users():
     for u in users:
         print(f"{u.email}, {u.username}")
 
+
 def get_user_roles(email):
     user = User.query.filter_by(email=email).first()
     for r in user.roles:
         print(f"{r.id}, {r.name}")
+
+
+def del_user(email):
+    """remove a new user
+    :param email:   email ID mapped to Google login ID
+    """
+    user = User.query.filter_by(email=email).first()
+    db.session.delete(user)
+    db.session.commit()
+    app.logger.info("Removed email ID {} , username  {}".format(user.email, user.username))
+
 
 def del_role(role_name):
     """remove a role"""
     role = Role.query.filter_by(name=role_name).first()
     db.session.delete(role)
     db.session.commit()
+
 
 def del_user_from_role(email, role_name):
     """remove user from role"""

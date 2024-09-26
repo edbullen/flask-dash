@@ -63,11 +63,14 @@ if __name__ == '__main__':
                 utils.get_roles()
 
         if args["del"]:
-            if args["role_name"] and not args["email"]:
+            # remove a user
+            if args["email"] and not args["role_name"]:
+                utils.del_user(args["email"])
+            # remove a role
+            elif args["role_name"] and not args["email"]:
                 role_name = args["role_name"]
-                # add a new role
                 utils.del_role(role_name)
-            # add a user to a role
+            # remove a user from a role
             elif args["role_name"] and args["email"]:
                 utils.del_user_from_role(args["email"], args["role_name"])
 

@@ -1,7 +1,7 @@
 """initialise database
 
 Revision ID: 43ceabcbd097
-Revises: 
+Revises:
 Create Date: 2022-09-01 16:31:40.578555
 
 """
@@ -56,7 +56,6 @@ def upgrade():
     sa.Column('username', sa.String(length=256), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('username')
     )
     op.create_table('flask_dance_oauth',
     sa.Column('id', sa.Integer(), nullable=False),
